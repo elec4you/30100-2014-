@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อสอบปลายภาค - กลศาสตร์วิศวกรรม</title>
+    <style>
+        /* ============================
+           CSS: Cyberpunk + Glassmorphism 
+           ============================ */
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-color: #050510;
+            --glass-bg: rgba(10, 10, 25, 0.6);
+            --glass-border: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 0, 255, 0.08), transparent 25%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            
+            /* ป้องกันการคลุมดำข้อความเพื่อคัดลอก */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 10px rgba(255, 0, 255, 0.05);
+            position: relative;
+            z-index: 10;
+            margin: 40px 0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
+        .text-neon-pink { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+        
+        /* Dashboard Info Text */
+        .info-panel {
+            border-left: 4px solid var(--neon-pink);
+            padding-left: 15px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .info-panel p { margin-bottom: 5px; }
+
+        /* Inputs & Buttons */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            border-radius: 5px;
+            outline: none;
+            margin-bottom: 20px;
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+            transition: box-shadow 0.3s ease;
+            
+            /* อนุญาตให้พิมพ์และเลือกข้อความในช่องกรอกชื่อได้ */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: #fff;
+            border: 2px solid var(--neon-blue);
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+        }
+
+        button:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        button.btn-pink {
+            border-color: var(--neon-pink);
+        }
+
+        button.btn-pink:hover {
+            background: var(--neon-pink);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        /* Exam Section */
+        #timer {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--neon-pink);
+            text-align: right;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .question-box {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-item:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .option-item.selected {
+            border-color: var(--neon-pink);
+            background: rgba(255, 0, 255, 0.1);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        /* Screens Management */
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--neon-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- =======================
+             SCREEN 1: Intro
+             ======================= -->
+        <div id="intro-screen" class="screen active">
+            <h1 class="text-neon-blue" style="margin-bottom: 20px;">SYSTEM // INITIATED</h1>
+            
+            <div class="info-panel">
+                <p><strong>วิทยาลัยสารพัดช่างศรีสะเกษ</strong></p>
+                <p>สำนักงานคณะกรรมการการอาชีวศึกษา กระทรวงศึกษาธิการ</p>
+                <p class="text-neon-pink">ต้นฉบับข้อสอบปลายภาค ภาคเรียนที่ 1/2569 รูปแบบออนไลน์(QR-Code)</p>
+                <br>
+                <p><strong>รหัสวิชา:</strong> 30100-2014</p>
+                <p><strong>ชื่อวิชา:</strong> กลศาสตร์วิศวกรรม ท-ป-น 3-0-3</p>
+                <p>นักศึกษาสาขาวิชา เทคนิคโลหะ ระดับชั้น ปวส.1</p>
+                <br>
+                <p><strong>ข้อสอบจำนวน:</strong> 40 ข้อ | <strong>คะแนนเต็ม:</strong> 40 คะแนน</p>
+                <p><strong>เวลา:</strong> 60 นาที</p>
+                <p><strong>ครูผู้ออกข้อสอบ:</strong> นายวิทยากร วรรณา</p>
+            </div>
+
+            <button onclick="showScreen('login-screen')">ถัดไป (NEXT) >></button>
+        </div>
+
+        <!-- =======================
+             SCREEN 2: Login / Name Input
+             ======================= -->
+        <div id="login-screen" class="screen">
+            <h2 class="text-neon-pink" style="margin-bottom: 20px;">USER // AUTHENTICATION</h2>
+            <p style="margin-bottom: 10px; color: #ccc;">กรุณากรอกชื่อ-นามสกุล ก่อนทำข้อสอบ</p>
+            <input type="text" id="studentName" placeholder="ระบุ ชื่อ-นามสกุล ของคุณที่นี่..." autocomplete="off">
+            <button class="btn-pink" onclick="startExam()">เริ่มทำข้อสอบ (START EXAM)</button>
+        </div>
+
+        <!-- =======================
+             SCREEN 3: Exam
+             ======================= -->
+        <div id="exam-screen" class="screen">
+            <div id="timer">00:00</div>
+            <h3 class="text-neon-blue" id="question-progress" style="text-align: left; margin-bottom: 10px;">Q: 1/40</h3>
+            
+            <div class="question-box" id="question-text">
+                <!-- คำถามจะถูกโหลดมาแสดงที่นี่ -->
+            </div>
+            
+            <ul class="options-list" id="options-container">
+                <!-- ตัวเลือกจะถูกโหลดมาแสดงที่นี่ -->
+            </ul>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="btn-next" onclick="nextQuestion()">ข้อถัดไป (NEXT)</button>
+                <button id="btn-submit" class="btn-pink" style="display: none;" onclick="submitExam()">ส่งคำตอบ (SUBMIT)</button>
+            </div>
+        </div>
+
+        <!-- =======================
+             SCREEN 4: Result & Saving
+             ======================= -->
+        <div id="result-screen" class="screen">
+            <h1 class="text-neon-blue">EXAM // COMPLETE</h1>
+            <div id="score-display" style="font-size: 2rem; text-align: center; margin: 20px 0; line-height: 1.5; text-shadow: 0 0 15px var(--neon-blue);"></div>
+            
+            <div id="saving-status" style="text-align: center;">
+                <div class="loader"></div>
+                <p class="text-neon-pink">กำลังอัปโหลดข้อมูลเข้าสู่ระบบ...</p>
+            </div>
+            
+            <div id="success-message" style="display: none; text-align: center; color: #0f0;">
+                <p>บันทึกข้อมูลเสร็จสมบูรณ์ ขอบคุณที่เข้าร่วมการทดสอบ</p>
+            </div>
+            <div id="error-message" style="display: none; text-align: center; color: #f00;">
+                <p>เกิดข้อผิดพลาดในการบันทึกข้อมูล โปรดแจ้งผู้คุมสอบ</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ============================
+           JAVASCRIPT LOGIC
+           ============================ */
+
+        // 1. URL สำหรับส่งข้อมูลไปยัง Google Apps Script
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHbJ2OucqdKOGKNTDJ3JQW8VdEl_py4A_24EmMSiNmil1P17pkkPcs8FMD_4JkVjI5Gw/exec";
+
+        // 2. ข้อมูลต้นฉบับข้อสอบ 40 ข้อ (อัปเดตเป็นวิชากลศาสตร์วิศวกรรม)
+        const rawQuestions = [
+            { q: "ปริมาณเวกเตอร์คือปริมาณที่มีลักษณะตามข้อใด?", options: ["มีเฉพาะขนาด", "มีเฉพาะทิศทาง", "มีทั้งขนาดและทิศทาง", "ไม่มีทั้งขนาดและทิศทาง"], ans: 2 },
+            { q: "หน่วยของแรงในระบบหน่วยวัดระหว่างประเทศ (SI) คืออะไร?", options: ["กิโลกรัม", "นิวตัน", "จูล", "วัตต์"], ans: 1 },
+            { q: "ข้อใดคือความหมายของกฎข้อที่ 1 ของนิวตัน?", options: ["แรงกิริยาเท่ากับแรงปฏิกิริยา", "วัตถุจะรักษาสภาพหยุดนิ่งหรือเคลื่อนที่ด้วยความเร็วคงที่หากไม่มีแรงลัพธ์มากระทำ", "ความเร่งของวัตถุแปรผันตรงกับแรงลัพธ์และแปรผกผันกับมวล", "แรงดึงดูดระหว่างมวลแปรผันตรงกับมวลทั้งสอง"], ans: 1 },
+            { q: "หากต้องการคำนวณหาแรงลัพธ์ที่ทำให้วัตถุเกิดความเร่ง ต้องใช้กฎข้อใดของนิวตัน?", options: ["กฎข้อที่ 1", "กฎข้อที่ 2", "กฎข้อที่ 3", "กฎแรงดึงดูดระหว่างมวล"], ans: 1 },
+            { q: "แรงกิริยาและแรงปฏิกิริยาตามกฎข้อที่ 3 ของนิวตัน มีลักษณะตามข้อใด?", options: ["มีขนาดเท่ากัน ทิศทางเดียวกัน", "มีขนาดเท่ากัน ทิศทางตรงข้ามกัน", "กระทำบนวัตถุก้อนเดียวกัน", "หักล้างกันจนแรงลัพธ์เป็นศูนย์เสมอ"], ans: 1 },
+            { q: "โมเมนต์ของแรงคำนวณได้จากสิ่งใด?", options: ["มวลคูณด้วยความเร่ง", "แรงคูณด้วยความเร็ว", "แรงคูณด้วยระยะทางตั้งฉากจากจุดหมุนถึงแนวแรง", "มวลคูณด้วยระยะทางตั้งฉาก"], ans: 2 },
+            { q: "หน่วยของโมเมนต์ในระบบ SI คืออะไร?", options: ["นิวตัน (N)", "นิวตัน-เมตร (N.m)", "จูล (J)", "วัตต์ (W)"], ans: 1 },
+            { q: "แรงคู่ควบ (Couple) ประกอบด้วยแรงลักษณะใด?", options: ["แรงสองแรงที่มีขนาดเท่ากัน ทิศทางเดียวกัน และขนานกัน", "แรงสองแรงที่มีขนาดเท่ากัน ทิศทางตรงข้ามกัน และอยู่ในแนวเส้นตรงเดียวกัน", "แรงสองแรงที่มีขนาดเท่ากัน ทิศทางตรงข้ามกัน ขนานกันแต่ไม่อยู่ในแนวเส้นตรงเดียวกัน", "แรงสามแรงที่กระทำพบกันที่จุดเดียว"], ans: 2 },
+            { q: "ทฤษฎีลามี (Lami's Theorem) ใช้คำนวณในกรณีที่มีแรงกระทำต่อจุดกี่แรงและอยู่ในสภาวะใด?", options: ["2 แรง ในสภาวะสมดุล", "3 แรง ในสภาวะสมดุล", "4 แรง ในสภาวะสมดุล", "กี่แรงก็ได้ ในสภาวะสมดุล"], ans: 1 },
+            { q: "จุดเซนทรอยด์ (Centroid) ของรูปสี่เหลี่ยมผืนผ้าอยู่ที่ตำแหน่งใด?", options: ["จุดกึ่งกลางของฐาน", "จุดกึ่งกลางของความสูง", "จุดตัดของเส้นทแยงมุม", "จุดใดๆ บนเส้นขอบ"], ans: 2 },
+            { q: "จุดเซนทรอยด์ของรูปสามเหลี่ยมอยู่ที่ระยะใดจากฐาน?", options: ["1/2 ของความสูง", "1/3 ของความสูง", "1/4 ของความสูง", "2/3 ของความสูง"], ans: 1 },
+            { q: "สูตรการหาโมเมนต์ความเฉื่อย (Moment of Inertia) ของรูปสี่เหลี่ยมผืนผ้ารอบแกนผ่านจุดศูนย์ถ่วง (แกน x) คือข้อใด?", options: ["bh^2/6", "bh^3/12", "bh^3/3", "hb^3/12"], ans: 1 },
+            { q: "รัศมีไจเรชั่น (Radius of Gyration) มีหน่วยการวัดตามข้อใด?", options: ["หน่วยของมวล", "หน่วยของพื้นที่", "หน่วยของความยาว", "ไม่มีหน่วย"], ans: 2 },
+            { q: "แรงเสียดทาน (Friction) มีทิศทางอย่างไรเมื่อเทียบกับการเคลื่อนที่ของวัตถุ?", options: ["ทิศทางเดียวกับการเคลื่อนที่", "ทิศทางตรงข้ามกับการเคลื่อนที่", "ทิศทางตั้งฉากกับการเคลื่อนที่", "ทำมุม 45 องศากับการเคลื่อนที่"], ans: 1 },
+            { q: "สัมประสิทธิ์ความเสียดทาน (Coefficient of Friction) คืออัตราส่วนระหว่างปริมาณใด?", options: ["แรงเสียดทานต่อแรงดึง", "แรงเสียดทานต่อแรงปฏิกิริยาตั้งฉาก", "แรงปฏิกิริยาตั้งฉากต่อแรงเสียดทาน", "แรงดึงต่อน้ำหนักวัตถุ"], ans: 1 },
+            { q: "แรงเสียดทานสถิต (Static Friction) จะมีค่าสูงสุดเมื่อใด?", options: ["เมื่อวัตถุหยุดนิ่งสนิท", "เมื่อวัตถุกำลังจะเริ่มเคลื่อนที่", "เมื่อวัตถุเคลื่อนที่ด้วยความเร็วคงที่", "เมื่อวัตถุเคลื่อนที่ด้วยความเร่ง"], ans: 1 },
+            { q: "ความเร็ว (Velocity) แตกต่างจากอัตราเร็ว (Speed) อย่างไร?", options: ["ความเร็วเป็นสเกลาร์ อัตราเร็วเป็นเวกเตอร์", "ความเร็วมีทิศทาง อัตราเร็วไม่มีทิศทาง", "ความเร็วมีหน่วยเป็น m/s อัตราเร็วมีหน่วยเป็น km/h", "ไม่แตกต่างกัน ใช้แทนกันได้"], ans: 1 },
+            { q: "ความเร่ง (Acceleration) คืออะไร?", options: ["ระยะทางที่เปลี่ยนไปในหนึ่งหน่วยเวลา", "การกระจัดที่เปลี่ยนไปในหนึ่งหน่วยเวลา", "ความเร็วที่เปลี่ยนไปในหนึ่งหน่วยเวลา", "มวลที่เปลี่ยนไปในหนึ่งหน่วยเวลา"], ans: 2 },
+            { q: "การเคลื่อนที่แบบโปรเจกไทล์ (Projectile Motion) ความเร็วในแนวราบมีลักษณะอย่างไร (หากไม่คิดแรงต้านอากาศ)?", options: ["เพิ่มขึ้นอย่างสม่ำเสมอ", "ลดลงอย่างสม่ำเสมอ", "คงที่ตลอดการเคลื่อนที่", "เป็นศูนย์ตลอดการเคลื่อนที่"], ans: 2 },
+            { q: "ในการเคลื่อนที่แบบโปรเจกไทล์ ความเร่งในแนวดิ่งมีค่าเท่ากับเท่าใด?", options: ["ศูนย์", "ความเร่งเนื่องจากแรงโน้มถ่วงของโลก (g)", "แปรผันตามมวลของวัตถุ", "แปรผันตามความเร็วต้น"], ans: 1 },
+            { q: "งาน (Work) ในทางกลศาสตร์เกิดขึ้นเมื่อใด?", options: ["มีแรงมากระทำต่อวัตถุ", "วัตถุมีการเคลื่อนที่", "มีแรงกระทำและวัตถุเคลื่อนที่ตามแนวแรงนั้น", "มีแรงกระทำและวัตถุเคลื่อนที่ตั้งฉากกับแรงนั้น"], ans: 2 },
+            { q: "หน่วยของงานและพลังงานในระบบ SI คืออะไร?", options: ["วัตต์", "จูล", "นิวตัน", "ปาสกาล"], ans: 1 },
+            { q: "พลังงานจลน์ (Kinetic Energy) ของวัตถุขึ้นอยู่กับตัวแปรใด?", options: ["มวลและความสูง", "มวลและความเร็ว", "น้ำหนักและความสูง", "ความเร็วและเวลา"], ans: 1 },
+            { q: "วัตถุที่ตกลงมาอย่างอิสระจากที่สูง พลังงานศักย์โน้มถ่วงจะเปลี่ยนแปลงอย่างไร?", options: ["เพิ่มขึ้น", "ลดลง", "คงที่", "กลายเป็นศูนย์ทันทีที่เริ่มตก"], ans: 1 },
+            { q: "กฎการอนุรักษ์พลังงานกล่าวไว้ว่าอย่างไร?", options: ["พลังงานสามารถสร้างขึ้นใหม่ได้เสมอ", "พลังงานสามารถทำลายให้สูญหายได้", "พลังงานไม่สามารถสร้างใหม่หรือทำลายได้ แต่เปลี่ยนรูปได้", "พลังงานจลน์จะเท่ากับพลังงานศักย์เสมอ"], ans: 2 },
+            { q: "กำลัง (Power) ทางกลศาสตร์หมายถึงอะไร?", options: ["ความสามารถในการออกแรง", "อัตราการทำงาน หรือ งานที่ทำได้ในหนึ่งหน่วยเวลา", "แรงที่ทำให้วัตถุเคลื่อนที่ไปได้ระยะทางหนึ่ง", "ผลคูณระหว่างแรงและความเร่ง"], ans: 1 },
+            { q: "กำลัง 1 แรงม้า (Horsepower) มีค่าเทียบเท่ากับกี่วัตต์ (โดยประมาณ)?", options: ["100 วัตต์", "500 วัตต์", "746 วัตต์", "1000 วัตต์"], ans: 2 },
+            { q: "โมเมนตัม (Momentum) คำนวณได้จากสมการใด?", options: ["มวล × ความเร่ง", "มวล × ความเร็ว", "แรง × ระยะทาง", "แรง × เวลา"], ans: 1 },
+            { q: "การดล (Impulse) มีค่าเท่ากับการเปลี่ยนแปลงของปริมาณใด?", options: ["ความเร็ว", "ความเร่ง", "พลังงานจลน์", "โมเมนตัม"], ans: 3 },
+            { q: "การชนแบบยืดหยุ่นสมบูรณ์ (Perfectly Elastic Collision) ปริมาณใดต่อไปนี้มีค่าคงที่ก่อนและหลังการชน?", options: ["โมเมนตัมเท่านั้น", "พลังงานจลน์เท่านั้น", "ทั้งโมเมนตัมและพลังงานจลน์", "ไม่มีปริมาณใดคงที่"], ans: 2 },
+            { q: "การชนที่วัตถุติดกันไปหลังจากการชน เรียกว่าการชนแบบใด?", options: ["การชนแบบยืดหยุ่น", "การชนแบบไม่ยืดหยุ่นสมบูรณ์", "การชนแบบเฉียด", "การชนแบบสะท้อนกลับ"], ans: 1 },
+            { q: "ความเค้น (Stress) หมายถึงอะไร?", options: ["แรงภายนอกที่กระทำต่อวัตถุ", "แรงต้านทานภายในวัสดุต่อหนึ่งหน่วยพื้นที่หน้าตัด", "ระยะทางที่วัสดุยืดออก", "อัตราส่วนระหว่างความยาวที่เปลี่ยนไปต่อความยาวเดิม"], ans: 1 },
+            { q: "หน่วยของความเค้นในระบบ SI คืออะไร?", options: ["นิวตัน (N)", "จูล (J)", "นิวตันต่อตารางเมตร (N/m^2) หรือ ปาสกาล (Pa)", "ไม่มีหน่วย"], ans: 2 },
+            { q: "ความเครียด (Strain) หมายถึงอะไร?", options: ["แรงที่ทำให้วัสดุขาด", "ความทนทานของวัสดุ", "อัตราส่วนระหว่างส่วนที่ยืดหรือหดต่อความยาวเดิม", "แรงต้านทานภายในวัสดุ"], ans: 2 },
+            { q: "ความเครียด (Strain) มีหน่วยเป็นอะไร?", options: ["เมตร", "มิลลิเมตร", "ปาสกาล", "ไม่มีหน่วย"], ans: 3 },
+            { q: "โมดูลัสความยืดหยุ่น (Modulus of Elasticity) หรือ Young's Modulus คืออัตราส่วนระหว่างปริมาณใด?", options: ["ความเค้นต่อความเครียด", "ความเครียดต่อความเค้น", "แรงต่อน้ำหนัก", "มวลต่อปริมาตร"], ans: 0 },
+            { q: "ชิ้นส่วนของโครงข้อหมุน (Truss) ออกแบบมาเพื่อรับแรงชนิดใดเป็นหลัก?", options: ["แรงดัดและแรงบิด", "แรงดึงและแรงอัดตามแนวแกน", "แรงเฉือนและแรงดัด", "แรงบิดและแรงเฉือน"], ans: 1 },
+            { q: "ข้อใดคือลักษณะของแรงเฉือน (Shear Force)?", options: ["แรงที่กระทำในแนวตั้งฉากกับพื้นที่หน้าตัด", "แรงที่กระทำขนานกับพื้นที่หน้าตัด", "แรงที่ทำให้ชิ้นงานยืดออก", "แรงที่ทำให้ชิ้นงานบิดเป็นเกลียว"], ans: 1 },
+            { q: "เครื่องจักรกลอย่างง่ายประเภท \"รอกเดี่ยวตายตัว\" มีคุณสมบัติตามข้อใด?", options: ["ผ่อนแรงได้ครึ่งหนึ่ง", "ผ่อนแรงได้สองเท่า", "ไม่ผ่อนแรง แต่อำนวยความสะดวกในการเปลี่ยนทิศทางแรง", "ทั้งผ่อนแรงและเปลี่ยนทิศทางแรง"], ans: 2 },
+            { q: "รอกเดี่ยวเคลื่อนที่มีการได้เปรียบเชิงกล (Mechanical Advantage) ทางทฤษฎีเท่ากับเท่าใด?", options: ["0.5", "1", "2", "3"], ans: 2 }
+        ];
+
+        let questions = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+        let studentName = "";
+        
+        // ตัวแปรระบบป้องกันการทุจริต
+        let isExamActive = false;
+        let cheatDeductions = 0;
+        let cheatCooldown = false;
+
+        // ตัวแปรจับเวลา (60 นาที = 3600 วินาที)
+        let timeRemaining = 60 * 60;
+        let timerInterval;
+
+        // ฟังก์ชันสำหรับสุ่มตำแหน่งสมาชิกใน Array (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // ฟังก์ชันเตรียมข้อมูลข้อสอบ (สุ่มข้อสอบ และ สุ่มตัวเลือก)
+        function prepareExamQuestions() {
+            let prepared = JSON.parse(JSON.stringify(rawQuestions));
+
+            prepared.forEach(q => {
+                let optionsWithFlag = q.options.map((optText, index) => ({
+                    text: optText,
+                    isCorrect: index === q.ans
+                }));
+
+                shuffleArray(optionsWithFlag);
+
+                q.options = optionsWithFlag.map(item => item.text);
+                q.ans = optionsWithFlag.findIndex(item => item.isCorrect);
+            });
+
+            shuffleArray(prepared);
+            return prepared;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startExam() {
+            const nameInput = document.getElementById('studentName').value.trim();
+            if (nameInput === "") {
+                alert("ACCESS DENIED: กรุณากรอกชื่อ-นามสกุล ก่อนเริ่มทำข้อสอบครับ");
+                return;
+            }
+            studentName = nameInput;
+
+            alert("⚠️ กฎกติกาและการป้องกันการทุจริต ⚠️\n\n1. ห้ามออกจากหน้าจอ หรือสลับไปแท็บ/โปรแกรมอื่น\n2. ห้ามคัดลอกข้อความใดๆ\n3. ห้ามบันทึกภาพหน้าจอ (Screen Capture / PrintScreen)\n\n*** หากฝ่าฝืน ระบบจะเตือนและ 'หักคะแนน 1 คะแนน' ต่อการทำผิด 1 ครั้งทันที ***\n\nกด OK เพื่อเริ่มการทดสอบ");
+
+            questions = prepareExamQuestions();
+            userAnswers = new Array(questions.length).fill(null);
+            currentQuestion = 0;
+
+            isExamActive = true;
+            cheatDeductions = 0;
+
+            showScreen('exam-screen');
+            loadQuestion(currentQuestion);
+            
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // ==========================================
+        // ระบบตรวจจับการทุจริต (Anti-Cheating System)
+        // ==========================================
+        function handleCheating(reason) {
+            if (!isExamActive || cheatCooldown) return;
+            
+            cheatCooldown = true;
+            cheatDeductions++; // หัก 1 คะแนน
+            
+            alert(`🚨 ตรวจพบการทุจริต: ${reason}\n\nคุณถูกหัก 1 คะแนน!\n(โดนหักคะแนนสะสมไปแล้ว ${cheatDeductions} คะแนน)`);
+            
+            setTimeout(() => { cheatCooldown = false; }, 1000);
+        }
+
+        // 1. ดักจับการสลับแท็บเบราว์เซอร์
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                handleCheating("ออกจากหน้าจอข้อสอบ (เปลี่ยนแท็บ)");
+            }
+        });
+
+        // 2. ดักจับการสลับไปเปิดโปรแกรมอื่น หรือย่อหน้าต่างเบราว์เซอร์
+        window.addEventListener("blur", () => {
+            handleCheating("สลับไปหน้าต่างหรือโปรแกรมอื่น");
+        });
+
+        // 3. ดักจับการคัดลอกข้อความ
+        document.addEventListener("copy", (e) => {
+            handleCheating("พยายามคัดลอกข้อความ");
+            e.preventDefault();
+        });
+
+        // 4. ป้องกันการคลิกขวา
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+        });
+
+        // 5. ดักจับการกดปุ่ม PrintScreen (ล้างข้อมูล Clipboard ร่วมด้วย)
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "PrintScreen") {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(""); // ล้าง Clipboard เพื่อไม่ให้วางรูปได้
+                }
+                handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
+            }
+        });
+
+        // 6. ดักจับคีย์ลัด Ctrl+C, PrintScreen และคีย์ลัด Screenshot ต่างๆ
+        window.addEventListener("keydown", (e) => {
+            // ดักจับ Ctrl+C / Cmd+C
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                handleCheating("พยายามคัดลอกข้อความโดยใช้คีย์ลัด");
+                e.preventDefault();
+            }
+
+            // ดักจับปุ่ม PrintScreen ในจังหวะ Down
+            if (e.key === "PrintScreen") {
+                handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
+                e.preventDefault();
+            }
+
+            // ดักจับคีย์ลัดแค็ปหน้าจอ: Win+Shift+S, Cmd+Shift+3/4/5 หรือ Ctrl+Shift+S
+            if ((e.key === 'S' || e.key === 's' || e.key === '3' || e.key === '4' || e.key === '5') && 
+                (e.shiftKey && (e.metaKey || e.ctrlKey))) {
+                handleCheating("พยายามใช้คีย์ลัดบันทึกภาพหน้าจอ");
+                e.preventDefault();
+            }
+        });
+        // ==========================================
+
+        function updateTimer() {
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                submitExam();
+                return;
+            }
+            timeRemaining--;
+            let m = Math.floor(timeRemaining / 60);
+            let s = timeRemaining % 60;
+            document.getElementById('timer').innerText = `TIME: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function loadQuestion(index) {
+            const qObj = questions[index];
+            document.getElementById('question-progress').innerText = `Q: ${index + 1}/${questions.length}`;
+            document.getElementById('question-text').innerText = qObj.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            qObj.options.forEach((opt, i) => {
+                const li = document.createElement('li');
+                li.className = 'option-item';
+                if (userAnswers[index] === i) li.classList.add('selected');
+                
+                li.innerText = opt;
+                li.onclick = () => selectOption(index, i, li);
+                optionsContainer.appendChild(li);
+            });
+
+            if (index === questions.length - 1) {
+                document.getElementById('btn-next').style.display = 'none';
+                document.getElementById('btn-submit').style.display = 'block';
+            } else {
+                document.getElementById('btn-next').style.display = 'block';
+                document.getElementById('btn-submit').style.display = 'none';
+            }
+        }
+
+        function selectOption(qIndex, optIndex, element) {
+            userAnswers[qIndex] = optIndex;
+            const siblings = element.parentElement.children;
+            for (let el of siblings) {
+                el.classList.remove('selected');
+            }
+            element.classList.add('selected');
+        }
+
+        function nextQuestion() {
+            if (userAnswers[currentQuestion] === null) {
+                alert("กรุณาเลือกคำตอบก่อนไปข้อถัดไปครับ");
+                return;
+            }
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                loadQuestion(currentQuestion);
+            }
+        }
+
+        function submitExam() {
+            if (userAnswers.includes(null) && timeRemaining > 0) {
+                if (!confirm("คุณยังทำข้อสอบไม่ครบทุกข้อ ต้องการส่งคำตอบเลยหรือไม่?")) return;
+            }
+
+            clearInterval(timerInterval);
+            isExamActive = false;
+            
+            // ตรวจคะแนนดิบ
+            let rawScore = 0;
+            userAnswers.forEach((ans, i) => {
+                if (ans === questions[i].ans) rawScore++;
+            });
+
+            // คำนวณคะแนนสุทธิหลังหักคะแนนทุจริต
+            score = rawScore - cheatDeductions;
+            if (score < 0) score = 0;
+
+            showScreen('result-screen');
+            
+            document.getElementById('score-display').innerHTML = `
+                คะแนนสุทธิ: ${score} / ${questions.length}<br>
+                <span style="font-size: 1.2rem; color: var(--neon-pink); display: block; margin-top: 15px;">
+                    (ทำได้ ${rawScore} คะแนน, หักจากการทุจริต ${cheatDeductions} คะแนน)
+                </span>
+            `;
+
+            sendDataToGAS(studentName, score);
+        }
+
+        function sendDataToGAS(name, score) {
+            const payload = JSON.stringify({ name: name, score: score });
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: payload
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('saving-status').style.display = 'none';
+                if (data.result === 'success') {
+                    document.getElementById('success-message').style.display = 'block';
+                } else {
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('saving-status').style.display = 'none';
+                document.getElementById('error-message').style.display = 'block';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
