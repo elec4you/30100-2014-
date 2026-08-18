@@ -194,6 +194,35 @@
             box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
         }
 
+        /* Scores Table */
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .score-table th, .score-table td {
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            text-align: left;
+        }
+        .score-table th {
+            color: var(--neon-pink);
+            background: rgba(255, 0, 255, 0.1);
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+            text-transform: uppercase;
+        }
+        .score-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .score-table tr:hover {
+            background: rgba(0, 243, 255, 0.1);
+        }
+        #scores-content {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+
         /* Screens Management */
         .screen { display: none; }
         .screen.active { display: block; animation: fadeIn 0.5s ease; }
@@ -222,9 +251,6 @@
 
     <div class="container">
         
-        <!-- =======================
-             SCREEN 1: Intro
-             ======================= -->
         <div id="intro-screen" class="screen active">
             <h1 class="text-neon-blue" style="margin-bottom: 20px;">SYSTEM // INITIATED</h1>
             
@@ -242,33 +268,55 @@
                 <p><strong>ครูผู้ออกข้อสอบ:</strong> นายวิทยากร วรรณา</p>
             </div>
 
-            <button onclick="showScreen('login-screen')">ถัดไป (NEXT) >></button>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
+                <button onclick="showScreen('login-screen')">ถัดไป เพื่อสอบ (NEXT) >></button>
+                <button class="btn-pink" onclick="fetchAndShowScores()">ดูคะแนนสอบ (VIEW SCORES)</button>
+            </div>
         </div>
 
-        <!-- =======================
-             SCREEN 2: Login / Name Input
-             ======================= -->
+        <div id="scores-screen" class="screen">
+            <h1 class="text-neon-blue" style="margin-bottom: 20px;">LEADERBOARD // SCORES</h1>
+            
+            <div id="scores-loading" style="text-align: center;">
+                <div class="loader"></div>
+                <p class="text-neon-pink">กำลังดึงข้อมูลคะแนนสอบจากระบบ...</p>
+            </div>
+            
+            <div id="scores-content" style="display: none;">
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th>ลำดับ</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th>คะแนน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scores-table-body">
+                        </tbody>
+                </table>
+            </div>
+            
+            <button style="margin-top: 20px;" onclick="showScreen('intro-screen')"><< ย้อนกลับ (BACK)</button>
+        </div>
+
         <div id="login-screen" class="screen">
             <h2 class="text-neon-pink" style="margin-bottom: 20px;">USER // AUTHENTICATION</h2>
             <p style="margin-bottom: 10px; color: #ccc;">กรุณากรอกชื่อ-นามสกุล ก่อนทำข้อสอบ</p>
             <input type="text" id="studentName" placeholder="ระบุ ชื่อ-นามสกุล ของคุณที่นี่..." autocomplete="off">
-            <button class="btn-pink" onclick="startExam()">เริ่มทำข้อสอบ (START EXAM)</button>
+            
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <button class="btn-pink" onclick="startExam()">เริ่มทำข้อสอบ (START EXAM)</button>
+                <button style="border-color: rgba(255,255,255,0.3); color: #ccc;" onclick="showScreen('intro-screen')"><< ย้อนกลับ (BACK)</button>
+            </div>
         </div>
 
-        <!-- =======================
-             SCREEN 3: Exam
-             ======================= -->
         <div id="exam-screen" class="screen">
             <div id="timer">00:00</div>
             <h3 class="text-neon-blue" id="question-progress" style="text-align: left; margin-bottom: 10px;">Q: 1/40</h3>
             
-            <div class="question-box" id="question-text">
-                <!-- คำถามจะถูกโหลดมาแสดงที่นี่ -->
-            </div>
+            <div class="question-box" id="question-text"></div>
             
-            <ul class="options-list" id="options-container">
-                <!-- ตัวเลือกจะถูกโหลดมาแสดงที่นี่ -->
-            </ul>
+            <ul class="options-list" id="options-container"></ul>
 
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button id="btn-next" onclick="nextQuestion()">ข้อถัดไป (NEXT)</button>
@@ -276,9 +324,6 @@
             </div>
         </div>
 
-        <!-- =======================
-             SCREEN 4: Result & Saving
-             ======================= -->
         <div id="result-screen" class="screen">
             <h1 class="text-neon-blue">EXAM // COMPLETE</h1>
             <div id="score-display" style="font-size: 2rem; text-align: center; margin: 20px 0; line-height: 1.5; text-shadow: 0 0 15px var(--neon-blue);"></div>
@@ -303,10 +348,10 @@
            JAVASCRIPT LOGIC
            ============================ */
 
-        // 1. URL สำหรับส่งข้อมูลไปยัง Google Apps Script
+        // อัปเดต URL GAS ใหม่ตามที่คุณระบุ
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHbJ2OucqdKOGKNTDJ3JQW8VdEl_py4A_24EmMSiNmil1P17pkkPcs8FMD_4JkVjI5Gw/exec";
 
-        // 2. ข้อมูลต้นฉบับข้อสอบ 40 ข้อ (อัปเดตเป็นวิชากลศาสตร์วิศวกรรม)
+        // อัปเดตชุดข้อสอบใหม่ 40 ข้อ
         const rawQuestions = [
             { q: "ปริมาณเวกเตอร์คือปริมาณที่มีลักษณะตามข้อใด?", options: ["มีเฉพาะขนาด", "มีเฉพาะทิศทาง", "มีทั้งขนาดและทิศทาง", "ไม่มีทั้งขนาดและทิศทาง"], ans: 2 },
             { q: "หน่วยของแรงในระบบหน่วยวัดระหว่างประเทศ (SI) คืออะไร?", options: ["กิโลกรัม", "นิวตัน", "จูล", "วัตต์"], ans: 1 },
@@ -356,16 +401,13 @@
         let userAnswers = [];
         let studentName = "";
         
-        // ตัวแปรระบบป้องกันการทุจริต
         let isExamActive = false;
         let cheatDeductions = 0;
         let cheatCooldown = false;
 
-        // ตัวแปรจับเวลา (60 นาที = 3600 วินาที)
         let timeRemaining = 60 * 60;
         let timerInterval;
 
-        // ฟังก์ชันสำหรับสุ่มตำแหน่งสมาชิกใน Array (Fisher-Yates Shuffle)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -374,22 +416,17 @@
             return array;
         }
 
-        // ฟังก์ชันเตรียมข้อมูลข้อสอบ (สุ่มข้อสอบ และ สุ่มตัวเลือก)
         function prepareExamQuestions() {
             let prepared = JSON.parse(JSON.stringify(rawQuestions));
-
             prepared.forEach(q => {
                 let optionsWithFlag = q.options.map((optText, index) => ({
                     text: optText,
                     isCorrect: index === q.ans
                 }));
-
                 shuffleArray(optionsWithFlag);
-
                 q.options = optionsWithFlag.map(item => item.text);
                 q.ans = optionsWithFlag.findIndex(item => item.isCorrect);
             });
-
             shuffleArray(prepared);
             return prepared;
         }
@@ -398,6 +435,51 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
+
+        // ==========================================
+        // ฟังก์ชันดึงคะแนนผ่าน SCRIPT_URL
+        // ==========================================
+        function fetchAndShowScores() {
+            showScreen('scores-screen');
+            document.getElementById('scores-loading').style.display = 'block';
+            document.getElementById('scores-content').style.display = 'none';
+            document.getElementById('scores-table-body').innerHTML = '';
+
+            fetch(SCRIPT_URL)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('scores-loading').style.display = 'none';
+                document.getElementById('scores-content').style.display = 'block';
+                const tbody = document.getElementById('scores-table-body');
+                
+                if(data && data.data && data.data.length > 0) {
+                    data.data.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${row.name || 'ไม่ระบุชื่อ'}</td>
+                            <td class="text-neon-pink" style="font-weight:bold;">${row.score !== undefined ? row.score : '-'} / 40</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">ยังไม่มีข้อมูลผู้เข้าสอบในระบบ หรือรอการตั้งค่าฝั่ง GAS (ฟังก์ชัน doGet)</td></tr>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('scores-loading').style.display = 'none';
+                document.getElementById('scores-content').style.display = 'block';
+                document.getElementById('scores-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:#ff4444;">
+                            ไม่สามารถดึงข้อมูลได้<br>
+                            <span style="font-size:0.9rem;">(โปรดตรวจสอบว่าฝั่ง GAS มีฟังก์ชัน doGet(e) สำหรับคืนค่า JSON หรือไม่)</span>
+                        </td>
+                    </tr>`;
+                console.error('Error fetching scores:', error);
+            });
+        }
+        // ==========================================
 
         function startExam() {
             const nameInput = document.getElementById('studentName').value.trim();
@@ -412,85 +494,66 @@
             questions = prepareExamQuestions();
             userAnswers = new Array(questions.length).fill(null);
             currentQuestion = 0;
-
-            isExamActive = true;
             cheatDeductions = 0;
 
             showScreen('exam-screen');
             loadQuestion(currentQuestion);
             
             timerInterval = setInterval(updateTimer, 1000);
+
+            setTimeout(() => {
+                isExamActive = true;
+            }, 1000);
         }
 
-        // ==========================================
-        // ระบบตรวจจับการทุจริต (Anti-Cheating System)
-        // ==========================================
+        // ระบบป้องกันทุจริต
         function handleCheating(reason) {
             if (!isExamActive || cheatCooldown) return;
-            
             cheatCooldown = true;
-            cheatDeductions++; // หัก 1 คะแนน
-            
+            cheatDeductions++;
             alert(`🚨 ตรวจพบการทุจริต: ${reason}\n\nคุณถูกหัก 1 คะแนน!\n(โดนหักคะแนนสะสมไปแล้ว ${cheatDeductions} คะแนน)`);
-            
             setTimeout(() => { cheatCooldown = false; }, 1000);
         }
 
-        // 1. ดักจับการสลับแท็บเบราว์เซอร์
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-                handleCheating("ออกจากหน้าจอข้อสอบ (เปลี่ยนแท็บ)");
-            }
+            if (document.hidden) handleCheating("ออกจากหน้าจอข้อสอบ (เปลี่ยนแท็บ)");
         });
 
-        // 2. ดักจับการสลับไปเปิดโปรแกรมอื่น หรือย่อหน้าต่างเบราว์เซอร์
         window.addEventListener("blur", () => {
             handleCheating("สลับไปหน้าต่างหรือโปรแกรมอื่น");
         });
 
-        // 3. ดักจับการคัดลอกข้อความ
         document.addEventListener("copy", (e) => {
             handleCheating("พยายามคัดลอกข้อความ");
             e.preventDefault();
         });
 
-        // 4. ป้องกันการคลิกขวา
         document.addEventListener("contextmenu", (e) => {
             e.preventDefault();
         });
 
-        // 5. ดักจับการกดปุ่ม PrintScreen (ล้างข้อมูล Clipboard ร่วมด้วย)
         window.addEventListener("keyup", (e) => {
             if (e.key === "PrintScreen") {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(""); // ล้าง Clipboard เพื่อไม่ให้วางรูปได้
-                }
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText("");
                 handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
             }
         });
 
-        // 6. ดักจับคีย์ลัด Ctrl+C, PrintScreen และคีย์ลัด Screenshot ต่างๆ
         window.addEventListener("keydown", (e) => {
-            // ดักจับ Ctrl+C / Cmd+C
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
                 handleCheating("พยายามคัดลอกข้อความโดยใช้คีย์ลัด");
                 e.preventDefault();
             }
-
-            // ดักจับปุ่ม PrintScreen ในจังหวะ Down
             if (e.key === "PrintScreen") {
                 handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
                 e.preventDefault();
             }
-
-            // ดักจับคีย์ลัดแค็ปหน้าจอ: Win+Shift+S, Cmd+Shift+3/4/5 หรือ Ctrl+Shift+S
             if ((e.key === 'S' || e.key === 's' || e.key === '3' || e.key === '4' || e.key === '5') && 
                 (e.shiftKey && (e.metaKey || e.ctrlKey))) {
                 handleCheating("พยายามใช้คีย์ลัดบันทึกภาพหน้าจอ");
                 e.preventDefault();
             }
         });
-        // ==========================================
 
         function updateTimer() {
             if (timeRemaining <= 0) {
@@ -559,13 +622,11 @@
             clearInterval(timerInterval);
             isExamActive = false;
             
-            // ตรวจคะแนนดิบ
             let rawScore = 0;
             userAnswers.forEach((ans, i) => {
                 if (ans === questions[i].ans) rawScore++;
             });
 
-            // คำนวณคะแนนสุทธิหลังหักคะแนนทุจริต
             score = rawScore - cheatDeductions;
             if (score < 0) score = 0;
 
